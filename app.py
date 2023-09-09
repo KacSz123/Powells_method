@@ -39,6 +39,14 @@ class MainWindow(tk.Tk):
         self.functionString = tk.StringVar()
         self.functionString.set('x1^2+(x2-2)^3')
         self.amountOfX = tk.IntVar(value=2)
+        self.epsilon1 = tk.IntVar(value=0.001)
+        self.epsilon2 = tk.IntVar(value=0.001)
+        self.epsilon  = tk.IntVar(value=0.001)
+        self.paramL  = tk.IntVar(value=1000)
+        self.x1Range = tk.StringVar()
+        self.x1Range.set('-10,10')
+        self.x2Range = tk.StringVar()
+        self.x2Range.set('-10,10')
         #############################################
         ############# variables end #################
         #############################################
@@ -46,13 +54,9 @@ class MainWindow(tk.Tk):
 
         self.container = ttk.Frame(self,style="Timer.TFrame")
         self.grid_columnconfigure(0,weight=1)
-        self.grid_columnconfigure(1,weight=3)
         self.grid_rowconfigure(0,weight=1)
-        self.grid_rowconfigure(1,weight=2)
         self.columnconfigure(0,weight=1)
-        self.columnconfigure(1,weight=3)
         self.rowconfigure(0,weight=1)
-        self.rowconfigure(1,weight=2)
         self.container.grid(column=0, row=0, sticky="NSWE",padx=5, pady=5,rowspan=2, columnspan=2)
 
         self.container.rowconfigure(0,weight=1)
@@ -67,7 +71,8 @@ class MainWindow(tk.Tk):
 
 
         self.paramsFrame = OptionPanel(container=self.sidePanel, controller=self)
-        self.paramsFrame.grid(row=0, column=0, sticky='NSWE', padx=1,pady=2)
+        self.paramsFrame.grid(row=0, column=0, sticky='NSWE', padx=1)
+
         self.logFrame = LogFrame(self.sidePanel,self)
         self.logFrame.grid(row=1, column=0, sticky='NSWE', padx=2,pady=2)
 
@@ -86,11 +91,11 @@ class MainWindow(tk.Tk):
     def makeStyles(self):
         print(self.style.theme_names())
         self.style.theme_use("clam")
-        self.style.configure("Timer.TFrame", background="grey",foreground="magenta", highlightbackground="blue", highlightthickness=10)
-        self.style.configure("Timer3.TFrame", background="#050f",foreground="#0f0")
-        self.style.configure("Timer4.TFrame", background="#ddd",foreground="#ddd")
-        self.style.configure("Title.TLabel", background="#ccc",foreground="#333", relief = 'ridge',border=2, borderwidth = 3, font=self.TITLE_FONT)
-        self.style.configure("Label1.TLabel", background="#ccc",foreground="#000",relief = 'groove', borderwidth = 2, font=self.LABELS_FONT)
+        self.style.configure("Timer.TFrame", background="grey",foreground="magenta", highlightbackground="grey", highlightthickness=10,padding=2, border=3, borderwidth=3)
+        self.style.configure("Timer3.TFrame", background="#050f",foreground="#0f0",padding=2,)
+        self.style.configure("Timer4.TFrame", background="#ddd",foreground="#ddd", highlightthickness=10,padding=2, border=3, borderwidth=3)
+        self.style.configure("Title.TLabel", background="#ccc",foreground="#333", relief = 'ridge', highlightthickness=10,border=2, borderwidth = 3, font=self.TITLE_FONT)
+        self.style.configure("Label1.TLabel", background="#ccc",foreground="#000",relief = 'groove', borderwidth = 2, font=self.LABELS_FONT, anchor = 'center')
         self["background"] = "#bbb"
     def proceedPowellsMethod(self):
         self.plotCanvas.plotHandler()
@@ -98,20 +103,11 @@ class MainWindow(tk.Tk):
         
 
     def showHelp(self):
-
         self.help1=HelpWindow()
-        # self.help1.protocol('WM_DELETE_WINDOW', self.destroy)
         self.help1.mainloop()
 
-    # self.help1.protocol('WM_DELETE_WINDOW', exit)
-    # self.help1.closeMe()
-    # def closeMe(self):
-    #     if self.help1!=None:
-    #         self.help1.destroy()
-    #     print(2)
-    #     self.destroy()
-    # def __del__(self):
-    #     self.__delattr__()
+
+
 class OptionPanel(ttk.Frame):
     OPTIONS = {}
     def __init__(self, container,controller, *args, **kwargs):
@@ -135,42 +131,43 @@ class OptionPanel(ttk.Frame):
         titleLabel = ttk.Label(self, text="Parameters", anchor='center',style="Title.TLabel")
         titleLabel.grid(row=0, column=0, sticky='WN')
 
-        stopCritFrame = ttk.Frame(self, style ="Timer.TFrame",padding=2, border=1, borderwidth=2)
+        stopCritFrame = ttk.Frame(self, style ="Timer.TFrame")
         stopCritFrame.rowconfigure(0,weight=1)
         stopCritFrame.rowconfigure(1,weight=1)
         stopCritFrame.rowconfigure(2,weight=1)
         stopCritFrame.rowconfigure(3,weight=1)
         stopCritFrame.columnconfigure(0,weight=1)
+        stopCritFrame.columnconfigure(1,weight=1)
         stopCritFrame.grid(row=2, column=0, sticky='WN')
         # stopCritFrame.columnconfigure(1,weight=1)
 
-        titleLabel = ttk.Label(stopCritFrame, text="Stop conditions", anchor='w',font=('Courier 12'))
-        titleLabel.grid(row=0, column=0, sticky='W')
+        titleLabel = ttk.Label(stopCritFrame, text=" Stop conditions ", style='Label1.TLabel')
+        titleLabel.grid(row=0, columnspan=2, sticky='WNE')
 
-        eps1Label=ttk.Label(stopCritFrame, text='ε_1:')
-        eps1Label.grid(row=1, column=0, sticky='W')
-        eps1Entry = ttk.Entry(stopCritFrame, width=6,font=('Courier 10'))
-        eps1Entry.grid(row=1, column=0, sticky='E')
-
-
-        eps2Label=ttk.Label(stopCritFrame, text='ε_1:')
-        eps2Label.grid(row=2, column=0, sticky='W')
-        eps2Entry = ttk.Entry(stopCritFrame, width=6,font=('Courier 10'))
-        eps2Entry.grid(row=2, column=0, sticky='E')
-
-        eps2Label=ttk.Label(stopCritFrame, text=' L :')
-        eps2Label.grid(row=3, column=0, sticky='W')
-        eps2Entry = ttk.Entry(stopCritFrame, width=6,font=('Courier 10'))
-        eps2Entry.grid(row=3, column=0, sticky='E')
+        eps1Label=ttk.Label(stopCritFrame, text='ε_1:', style='Label1.TLabel')
+        eps1Label.grid(row=1, column=0, sticky='ENWS')
+        eps1Entry = ttk.Entry(stopCritFrame, width=6,font=('Courier 10'), textvariable=controller.epsilon1)
+        eps1Entry.grid(row=1, column=1, sticky='WENS')
 
 
-        searchDirectFrame = ttk.Frame(self, style ="Timer.TFrame",padding=2, border=1, borderwidth=2)
+        eps2Label=ttk.Label(stopCritFrame, text='ε_2:', style='Label1.TLabel')
+        eps2Label.grid(row=2, column=0, sticky='EWNS')
+        eps2Entry = ttk.Entry(stopCritFrame, width=6,font=('Courier 10'), textvariable=controller.epsilon2)
+        eps2Entry.grid(row=2, column=1, sticky='WENS')
+
+        eps2Label=ttk.Label(stopCritFrame, text=' L : ', style='Label1.TLabel')
+        eps2Label.grid(row=3, column=0, sticky='EWN')
+        eps2Entry = ttk.Entry(stopCritFrame, width=6,font=('Courier 10'), textvariable=controller.paramL)
+        eps2Entry.grid(row=3, column=1, sticky='WENS')
+
+
+        searchDirectFrame = ttk.Frame(self, style ="Timer.TFrame")
         searchDirectFrame.rowconfigure(0,weight=1)
         searchDirectFrame.rowconfigure(1,weight=1)
         searchDirectFrame.rowconfigure(2,weight=1)
         searchDirectFrame.rowconfigure(3,weight=1)
-        searchDirectFrame.rowconfigure(4,weight=1)
         searchDirectFrame.columnconfigure(0,weight=1)
+        searchDirectFrame.columnconfigure(1,weight=1)
         searchDirectFrame.grid(row=2, column=1, sticky='WN')
 
 
@@ -178,46 +175,46 @@ class OptionPanel(ttk.Frame):
         methodList = ttk.Combobox(searchDirectFrame, state='readonly')
         methodList['values'] = controller.DIRECT_METHODS
         methodList.current(0)
-        # methodList.bind("<<ListboxSelect>>", )
-        methodList.grid(row=0, column=0, sticky='WE')
+        methodList.grid(row=0, columnspan=2, sticky='WEN')
 
-        sep1 = ttk.Separator(searchDirectFrame, orient='horizontal')
-        sep1.grid(row=1, column=0, sticky='WE')
-        sectionLabel=ttk.Label(searchDirectFrame, text='[a,b]:')
-        sectionLabel.grid(row=2, column=0, sticky='W')
-        sectionEntry = ttk.Entry(searchDirectFrame, width=6,font=('Courier 10'))
-        sectionEntry.grid(row=2, column=0, sticky='E')
-
-
-        epsLabel=ttk.Label(searchDirectFrame, text=' ε: ')
-        epsLabel.grid(row=3, column=0, sticky='W')
-        epsEntry = ttk.Entry(searchDirectFrame, width=6,font=('Courier 10'))
-        epsEntry.grid(row=3, column=0, sticky='E')
+        # sep1 = ttk.Separator(searchDirectFrame, orient='horizontal')
+        # sep1.grid(row=1, column=0, sticky='WEN')
+        sectionLabel=ttk.Label(searchDirectFrame, text=' [a,b]: ', style='Label1.TLabel')
+        sectionLabel.grid(row=2, column=0, sticky='WSEN')
+        sectionEntry = ttk.Entry(searchDirectFrame, width=3,font=('Courier 10'))
+        sectionEntry.grid(row=2, column=1, sticky='EWSN')
 
 
-        generalButtonsFrame = ttk.Frame(self, style ="Timer.TFrame",padding=2, border=1, borderwidth=2)
+        epsLabel=ttk.Label(searchDirectFrame, text=' ε: ', style='Label1.TLabel')
+        epsLabel.grid(row=3, column=0, sticky='EWNS')
+        epsEntry = ttk.Entry(searchDirectFrame, width=3,font=('Courier 10'), textvariable=controller.epsilon)
+        epsEntry.grid(row=3, column=1, sticky='WENS')
+
+
+        generalButtonsFrame = ttk.Frame(self, style ="Timer.TFrame")
         generalButtonsFrame.columnconfigure(0, weight=1)
         generalButtonsFrame.columnconfigure(1,weight=1)
         generalButtonsFrame.rowconfigure(0,weight=1)
         generalButtonsFrame.grid(row=0, column=1,sticky='N',columnspan=2)
 
-        runButton = ttk.Button(generalButtonsFrame, text='run', width=10, command=controller.proceedPowellsMethod)
+        runButton = ttk.Button(generalButtonsFrame, text='RUN', width=10, command=controller.proceedPowellsMethod)
         runButton.grid(row=0, column=0, sticky='W')
-        helpButton = ttk.Button(generalButtonsFrame, text='help', width=10, command=controller.showHelp)
+        helpButton = ttk.Button(generalButtonsFrame, text='HELP', width=10, command=controller.showHelp)
         helpButton.grid(row=0, column=1, sticky='W')
 
 
         functionFrame = ttk.Frame(self, style ="Timer2.TFrame",padding=5,height=15)
         functionFrame.grid_columnconfigure(0,weight=1)
+        functionFrame.grid_columnconfigure(1,weight=1)
         functionFrame.columnconfigure(0,weight=1)
         functionFrame.columnconfigure(1,weight=1)
         functionFrame.rowconfigure(0,weight=1)
         functionFrame.grid(row=1, column=0, sticky='WN',columnspan=2)
 
         funcLabel = ttk.Label(functionFrame, text=' function: ', style='Label1.TLabel')
-        funcLabel.grid(row=0, column=0,sticky='E')
-        funcEntry = ttk.Entry(functionFrame, width=20,textvariable=controller.functionString)
-        funcEntry.grid(row=0, column=1,sticky='W',padx=15)
+        funcLabel.grid(row=0, column=0,sticky='EW')
+        funcEntry = ttk.Entry(functionFrame, width=18,textvariable=controller.functionString)
+        funcEntry.grid(row=0, column=1,sticky='WE',padx=2)
 
         x0Frame = ttk.Frame(functionFrame, style ="Timer2.TFrame",padding=6)
         x0Frame.columnconfigure(0,weight=1)
@@ -226,7 +223,7 @@ class OptionPanel(ttk.Frame):
         x0Frame.grid(row=1, column=0, sticky='WN',columnspan=2)
 
 
-        x0Label=ttk.Label(x0Frame, text=' X_0:  ',style='Label1.TLabel',width=5,anchor='e')
+        x0Label=ttk.Label(x0Frame, text=' X_0:  ',style='Label1.TLabel',width=5,anchor='center')
         x0Label.grid(row=0, column=0, sticky='E')
         x0Entry = ttk.Entry(x0Frame, width=6,font=('Courier 12'), textvariable=controller.startPoint)
         x0Entry.grid(row=0, column=2, sticky='E',padx=5)
@@ -236,13 +233,18 @@ class OptionPanel(ttk.Frame):
         xAmountFrame.columnconfigure(0,weight=1)
         xAmountFrame.columnconfigure(1,weight=1)
         xAmountFrame.rowconfigure(0,weight=1)
+        xAmountFrame.rowconfigure(1,weight=1)
         xAmountFrame.grid(row=1, column=1, sticky='SE',columnspan=1)
 
 
-        xAmountLabel=ttk.Label(xAmountFrame, text=' X No. :  ',style='Label1.TLabel',width=7,anchor='e')
-        xAmountLabel.grid(row=0, column=0, sticky='E')
-        xAmountEntry = ttk.Spinbox(xAmountFrame, from_=0, to=5, textvariable=controller.amountOfX,wrap=True, width=1)
-        xAmountEntry.grid(row=0, column=1)
+        x1AmountLabel=ttk.Label(xAmountFrame, text=' X1 range:',style='Label1.TLabel')
+        x1AmountLabel.grid(row=0, column=0, sticky='NE')
+        x1RangeEntry = ttk.Entry(xAmountFrame,width=7, textvariable=controller.x1Range)
+        x1RangeEntry.grid(row=0, column=1,sticky='NW')
+        x2AmountLabel=ttk.Label(xAmountFrame, text=' X2 range:',style='Label1.TLabel')
+        x2AmountLabel.grid(row=1, column=0, sticky='SE')
+        x2RangeEntry = ttk.Entry(xAmountFrame,width=7,textvariable= controller.x2Range)
+        x2RangeEntry.grid(row=1, column=1,sticky='SW')
 
 
 class LogFrame(ttk.Frame):
@@ -287,14 +289,18 @@ class PlotWindow(tk.Frame):
         x10, x20 = self.controller.startPoint.get().split(',')
         x10 = float(x10)
         x20=float(x20)
-        x1=np.linspace(x10-5, x10+5,1000)
-        x2=np.linspace(x20-5, x20+5,1000)
+
+        x1lim = tuple([float(xo) for xo in self.controller.x1Range.get().split(',')])
+        x2lim = tuple([float(xo) for xo in self.controller.x2Range.get().split(',')])
+        # print(x1lim, type(x1lim), type(x1lim[1]))
+        x1=np.linspace(x1lim[0], x1lim[1],1000)
+        x2=np.linspace(x2lim[0], x2lim[1],1000)
 
         X1, X2 = np.meshgrid(x1, x2)
         Z = func(X1, X2)
         Z = np.array(Z)
         Z = np.reshape(Z, (len(x1), len(x2)))
-
+        # plt.plot.clear()
         self.cb.remove()
         self.a=self.ax.contourf(X1, X2, Z, extend='both', levels=20)
         self.cb=plt.colorbar(self.a)
@@ -342,6 +348,8 @@ class HelpWindow(tk.Tk):
         self.title('Powells Method - HELP')
         self.geometry('500x300')
         self.resizable(False,False)
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         self['background'] = '#444'
         self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(0,weight=1)
@@ -370,12 +378,14 @@ class HelpWindow(tk.Tk):
         cls.counter-=1
         print(cls.counter)
 
-    def closeMe(self):
+    # def closeMe(self):
+    #     # print(self.counter)
+    #     self.destroy()
+
+    def on_closing(self):
         self.counterDown()
-        # print(self.counter)
+        self.quit()
         self.destroy()
-
-
 
 
 
