@@ -1,7 +1,7 @@
 """:file: app.py File contains classes based on tkinter library,
     describing application style, settings if GUI
 """
-
+from powell import powellsMethod
 import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
@@ -12,6 +12,11 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 import sys
 from function_parser import parseFunction
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk
+)
+
 
 class MainWindow(tk.Tk):
     DIRECT_METHODS = ("Golden Search", 'method 2', 'method 3')
@@ -22,7 +27,7 @@ class MainWindow(tk.Tk):
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.title('Powells Method')
-        self.geometry("1040x470")
+        self.geometry("1070x530")
         self.resizable(False, False)
         
         self.style = ttk.Style(self)
@@ -37,12 +42,13 @@ class MainWindow(tk.Tk):
         self.startPoint = tk.StringVar()
         self.startPoint.set('-4,4')
         self.functionString = tk.StringVar()
-        self.functionString.set('x1^2+(x2-2)^3')
-        self.amountOfX = tk.IntVar(value=2)
+        self.functionString.set('(x1-2)^2+(x1-x2^2)^2')
+        self.abGSS = tk.StringVar()
+        self.abGSS.set('-1,1')
         self.epsilon1 = tk.IntVar(value=0.001)
         self.epsilon2 = tk.IntVar(value=0.001)
         self.epsilon  = tk.IntVar(value=0.001)
-        self.paramL  = tk.IntVar(value=1000)
+        self.paramL  = tk.IntVar(value=100)
         self.x1Range = tk.StringVar()
         self.x1Range.set('-10,10')
         self.x2Range = tk.StringVar()
@@ -181,7 +187,7 @@ class OptionPanel(ttk.Frame):
         # sep1.grid(row=1, column=0, sticky='WEN')
         sectionLabel=ttk.Label(searchDirectFrame, text=' [a,b]: ', style='Label1.TLabel')
         sectionLabel.grid(row=2, column=0, sticky='WSEN')
-        sectionEntry = ttk.Entry(searchDirectFrame, width=3,font=('Courier 10'))
+        sectionEntry = ttk.Entry(searchDirectFrame, width=3,font=('Courier 10'),textvariable= controller.abGSS)
         sectionEntry.grid(row=2, column=1, sticky='EWSN')
 
 
@@ -213,7 +219,7 @@ class OptionPanel(ttk.Frame):
 
         funcLabel = ttk.Label(functionFrame, text=' function: ', style='Label1.TLabel')
         funcLabel.grid(row=0, column=0,sticky='EW')
-        funcEntry = ttk.Entry(functionFrame, width=18,textvariable=controller.functionString)
+        funcEntry = ttk.Entry(functionFrame, width=25,textvariable=controller.functionString)
         funcEntry.grid(row=0, column=1,sticky='WE',padx=2)
 
         x0Frame = ttk.Frame(functionFrame, style ="Timer2.TFrame",padding=6)
@@ -275,7 +281,11 @@ class PlotWindow(tk.Frame):
         self.controller = controller
         self.fig = plt.Figure()
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
+        NavigationToolbar2Tk(self.canvas, self)
         self.ax = self.fig.add_subplot(111)
+        self.ax.set_title(str(self.controller.functionString.get()))
+        self.ax.set_xlabel('X_1')
+        self.ax.set_ylabel('X_2')
         self.a=self.ax.contourf([0,0], [0,0], [(0,0),(0,0)], extend='both', levels=1)
         self.ax.plot()
         self.cb=plt.colorbar(self.a)
@@ -285,14 +295,28 @@ class PlotWindow(tk.Frame):
 
 
     def plotHandler(self):
+
+        self.ax.cla()
         func = parseFunction(self.controller.functionString.get())
         x10, x20 = self.controller.startPoint.get().split(',')
-        x10 = float(x10)
+        x10 =float(x10)
         x20=float(x20)
-
+        self.cb.remove()
         x1lim = tuple([float(xo) for xo in self.controller.x1Range.get().split(',')])
         x2lim = tuple([float(xo) for xo in self.controller.x2Range.get().split(',')])
-        # print(x1lim, type(x1lim), type(x1lim[1]))
+        ab = self.controller.abGSS.get().split(',')
+
+        # ab = [ float(x) for x in ab]
+        powellResult = powellsMethod(func,[x10,x20],int(self.controller.epsilon1.get()),int(self.controller.epsilon2.get()), [ float(x) for x in ab],
+                                     self.controller.paramL.get(),ax=self.ax, canvas = self.canvas)
+        print(powellResult)
+        
+        self.ax.set_xlim(*x1lim)
+        self.ax.set_ylim(*x2lim)
+        print(self.controller.functionString.get())
+        self.ax.set_title(str(self.controller.functionString.get()))
+        self.ax.set_xlabel('X_1')
+        self.ax.set_ylabel('X_2')
         x1=np.linspace(x1lim[0], x1lim[1],1000)
         x2=np.linspace(x2lim[0], x2lim[1],1000)
 
@@ -301,9 +325,20 @@ class PlotWindow(tk.Frame):
         Z = np.array(Z)
         Z = np.reshape(Z, (len(x1), len(x2)))
         # plt.plot.clear()
-        self.cb.remove()
         self.a=self.ax.contourf(X1, X2, Z, extend='both', levels=20)
         self.cb=plt.colorbar(self.a)
+
+        # print(len(powellResult["stepList"][0][0]))
+        # print(len(powellResult["stepList"][1][0]))
+        # print(len(powellResult["stepList"][2][0]))
+        # print(len(powellResult["stepList"][3][0]))
+        # print(powellResult["stepList"][1][0])
+        # input()
+        # self.ax.plot(powellResult["stepList"][0][0], powellResult["stepList"][0][1], marker='o',
+        #             markersize=4, markeredgecolor="red", markerfacecolor="red" )
+        # self.ax.plot([powellResult["stepList"][0][0], powellResult["stepList"][1][0][0]],
+        #              [powellResult["stepList"][0][1],powellResult["stepList"][1][0][1]],'k-').clear()
+        # self.canvas.
         self.canvas.draw()
 
 
