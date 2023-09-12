@@ -1,6 +1,3 @@
-""":file: app.py File contains classes based on tkinter library,
-    describing application style, settings if GUI
-"""
 from powell import powellsMethod
 import tkinter as tk
 from tkinter import ttk, END, DISABLED
@@ -17,60 +14,124 @@ from matplotlib.backends.backend_tkagg import (
     NavigationToolbar2Tk
 )
 
+"""FILE: app.py File contains classes based on tkinter library,
+    describing application style and settings of GUI. 
+"""
 
 class MainWindow(tk.Tk):
-    """_summary_
+    """Superior class of whole application. Contains instance of LogFram,
+    OptionalPanel, PlotWindow, HelpWindow. Allows to input function of 2-5 variables
+    and search minimum with Powells Method.
 
     Args:
-        tk (_type_): _description_
+        tk (tk.Tk): Parent class Tkinter.
     
-    Constants:
+     Static Public Attributes:
         DIRECT_METHODS: tuple of available mathematical methods for searching minimum in direction.
         LABELS_FONT: macro of font for labels, ready to use.
         ENTRY_FONT: macro of font for entries, ready to use.
         TITLE_FONT: macro of font for title, ready to use.
+    Public Atributes:
+        style (ttk.Style): visual settings for app
     """
+
+    ###################################
+    #### tuple('str'): Tuple of implementend method for searching minimum in direction.
+    ###################################
     DIRECT_METHODS = ("Golden Search", 'To be Added',  'To be Added')
+    
+    ###################################
+    #### Font type for tk.Label
+    ###################################
     LABELS_FONT = ('Courier 13')
+
+    ###################################
+    #### Font type for tk.Entry
+    ###################################
     ENTRY_FONT = ('Courier 12')
+    ###################################
+    #### Font type for tk.Label - title
+    ###################################
     TITLE_FONT = ('Times 24')
 
     def __init__(self, *args, **kwargs)->None:
-        """ __init__ inits main window
+        """ Inits main window. Takes arguments same as tk.Tk.
+
         """
         super().__init__()
         self.title('Powells Method')
         self.geometry("1070x530")
         self.resizable(False, False)
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
         
+        ################
+        ### tk.stringVar value contains selected method in direction. 
+        ################
         self.style = ttk.Style(self)
         self.makeStyles()
-        self.protocol("WM_DELETE_WINDOW", self.on_closing)
-        #############################################
-        ################# variables #################
-        #############################################
-        self.selectedDirectMethod = tk.StringVar()
+
+        
+
+
+        ################
+        ### tk.stringVar value contains selected method in direction. 
+        ################
+        self.selectedDirectMethod = tk.StringVar() 
+        
+        ################
+        ### tk.stringVar value next message inserted in self.logFram.text: 
+        ################
         self.logVariable = tk.StringVar()
-        self.algorithmsStepString = tk.StringVar()
+        ################
+        ### tk.stringVar: value contains information about startpoint 
+        ################
         self.startPoint = tk.StringVar()
         self.startPoint.set('-4,4')
+
+        ################
+        ### tk.stringVar string with function to parse
+        ################
         self.functionString = tk.StringVar()
         self.functionString.set('(x1-2)^2+(x1-x2^2)^2')
+
+        ################
+        ### tk.stringVar section for searching minimum in direction
         self.abGSS = tk.StringVar()
         self.abGSS.set('-1,1')
-        self.epsilon1 = tk.IntVar(value=0.001)
-        self.epsilon2 = tk.IntVar(value=0.001)
+        ################
+        ### tk.stringVar minimum length between 2  following points 
+        ################
+        self.epsilon1 = tk.IntVar(value=0.0001)
+        ################
+        ### tk.stringVar minimum length between 2  following values of fun 
+        ################
+        self.epsilon2 = tk.IntVar(value=0.0001)
+        ################
+        ### tk.stringVar minimum length between 2  following values of fun in direction
+        ################
         self.epsilon  = tk.IntVar(value=0.001)
+
+        ################
+        ### tk.stringVar max number of iteration of algoruithm
+        ################
         self.paramL  = tk.IntVar(value=100)
+
+        ################
+        ### tk.stringVar [a,b] describes range of plot x axis
+        ################
         self.x1Range = tk.StringVar()
         self.x1Range.set('-10,10')
+        ################
+        ### tk.stringVar [a,b] describes range of plot y axis
+        ################
         self.x2Range = tk.StringVar()
         self.x2Range.set('-10,10')
-        #############################################
-        ############# variables end #################
-        #############################################
 
 
+
+        ################
+        ### ttk.Frame: main Frame of application
+        ################
         self.container = ttk.Frame(self,style="Timer.TFrame")
         self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(0,weight=1)
@@ -82,6 +143,10 @@ class MainWindow(tk.Tk):
         self.container.columnconfigure(0,weight=1)
         self.container.columnconfigure(1,weig=3)
 
+
+        ################
+        ### ttk.Frame Frame of side panel contains logs and params menu
+        ################
         self.sidePanel = ttk.Frame(self.container,style="Timer2.TFrame")
         self.sidePanel.rowconfigure(0,weight=10)
         self.sidePanel.rowconfigure(1,weight=11)
@@ -89,13 +154,24 @@ class MainWindow(tk.Tk):
         self.sidePanel.grid(column=0,row=0, sticky="NSW",padx=5,pady=5)
 
 
+        ################
+        ### ttk.Frame params menu.
+        ################
         self.paramsFrame = OptionPanel(container=self.sidePanel, controller=self)
         self.paramsFrame.grid(row=0, column=0, sticky='NSWE', padx=1)
 
-        self.logFrame = LogFrame(self.sidePanel,self)
+
+        ################
+        ### ttk.Frame for logs with ttk.Text
+        ################
+        self.logFrame = LogFrame(self.sidePanel)
         self.logFrame.grid(row=1, column=0, sticky='NSWE', padx=2,pady=2)
 
 
+
+        ################
+        ### ttk.Frame Frame contains canvas with plot
+        ################
         self.plotFrame = ttk.Frame(self.container,style="Timer3.TFrame")
         self.plotFrame.grid(row=0,column=1, sticky="NSWE",rowspan=2)
         self.plotCanvas = PlotWindow(self.plotFrame, self)
@@ -103,14 +179,17 @@ class MainWindow(tk.Tk):
         
 
     def on_closing(self)->None:
-        """_summary_
+        """Handler for colisng main window using messagebox.
         """
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.quit()
             self.destroy()
             # sys.exit(0)
+
     def makeStyles(self):
-        print(self.style.theme_names())
+        """Function makes few new styles for app.
+        """
+
         self.style.theme_use("clam")
         self.style.configure("Timer.TFrame", background="grey",foreground="magenta", highlightbackground="grey", highlightthickness=10,padding=2, border=3, borderwidth=3)
         self.style.configure("Timer3.TFrame", background="#050f",foreground="#0f0",padding=2,)
@@ -118,18 +197,34 @@ class MainWindow(tk.Tk):
         self.style.configure("Title.TLabel", background="#ccc",foreground="#333", relief = 'ridge', highlightthickness=10,border=2, borderwidth = 3, font=self.TITLE_FONT)
         self.style.configure("Label1.TLabel", background="#ccc",foreground="#000",relief = 'groove', borderwidth = 2, font=self.LABELS_FONT, anchor = 'center')
         self["background"] = "#bbb"
+
+
     def proceedPowellsMethod(self):
+        """Poweells Method Handler.
+        """
         self.plotCanvas.plotHandler()
-        print("POWELL!")
+        # print("POWELL!")
         
 
     def showHelp(self):
+        """Handler for open help window.
+        """
+
+
+        ################
+        ### (HelpWindow): instance of independence window with help
+        ################
         self.help1=HelpWindow()
         self.help1.mainloop()
 
 
 
 class OptionPanel(ttk.Frame):
+    """_summary_
+
+    Args:
+        ttk (Frame): Frame describing options with widgets for inputs.
+    """
     OPTIONS = {}
     def __init__(self, container,controller, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
@@ -269,11 +364,14 @@ class OptionPanel(ttk.Frame):
 
 
 class LogFrame(ttk.Frame):
+    """Simple frame with text field for saving logs.
 
+    Args:
+        ttk (Frame): parent class.
+    """
 
     def __init__(self, container)->None:
-        """_summary_
-
+        """ Creates new instance of LogFrame based on ttk.Frame.
         Args:
             container (tk.Tk): ref to main window
 
@@ -295,34 +393,75 @@ class LogFrame(ttk.Frame):
 
 
 class PlotWindow(tk.Frame):
+    """ PlotWindow plot function and plot it with contourf
+
+    Args:
+        tk (Frame): Frame with canvas and figure from matplotlib.
+    
+    Public Attributes:
+        container (tk.Tk): ref to main window
+        fig (matplotlib.pyplot): figure for visualization of function and PM.
+        canvas (FigureCanvasTkAgg): canvas for visalization
+        ax (Axes): axes of Plot
+        fig (plot.Figure()) figure to plot
+        contourf (Axes.contourf): Plot filled contours for func of 2 variables.
+        cb (colorbar): colourbar for Plot filled contours.
+
+    """
+
+
     def __init__(self, container, controller):
-        """_summary_
+        """Inits object and creates all public attributes.
 
         Args:
-            container (Frame): Container for this frame
-            controller (tk.Tk): main window or another object with controlls
+            container (ttk.Frame: Superior caontainer
+            controller (tk.Tk)): MainWindow witth global variables
         """
         super().__init__(container)
+        ##########################
+        #########  (tk.Tk): ref to main window
+        #########################
         self.controller = controller
+        
+        ##########################
+        #########  (matplotlib.pyplot): figure for visualization of function and PM.
+        #########################
         self.fig = plt.Figure()
+
+        ##########################
+        #########  (FigureCanvasTkAgg): canvas for visalization
+        #########################
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         NavigationToolbar2Tk(self.canvas, self)
+
+        ##########################
+        ######### (Axes): axes of Plot
+        #########################
         self.ax = self.fig.add_subplot(111)
-        print(type(self.ax))
-        input()
+        # print(type(self.ax))
+        # input()
         self.ax.set_title(str(self.controller.functionString.get()))
         self.ax.set_xlabel('X_1')
         self.ax.set_ylabel('X_2')
-        self.a=self.ax.contourf([0,0], [0,0], [(0,0),(0,0)], extend='both', levels=1)
+
+        ##########################
+        #########(Axes.contourf): Plot filled contours for func of 2 variables.
+        #########################
+        self.contourf=self.ax.contourf([0,0], [0,0], [(0,0),(0,0)], extend='both', levels=1)
         self.ax.plot()
-        self.cb=plt.colorbar(self.a)
+
+        ##########################
+        ######### cb (colorbar): colorbar for Plot filled contours.
+        #########################
+        self.cb=plt.colorbar(self.contourf)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.canvas.draw()
 
 
 
-    def plotHandler(self):
+    def plotHandler(self)->None:
         """Realization of visualisation of Powell Method.
+            Update plot with following points from PM.
         """
         self.ax.cla()
         self.cb.remove()
@@ -345,7 +484,7 @@ class PlotWindow(tk.Frame):
         
         self.ax.set_xlim(*x1lim)
         self.ax.set_ylim(*x2lim)
-        print(self.controller.functionString.get())
+        # print(self.controller.functionString.get())
         self.ax.set_title(str(self.controller.functionString.get()))
         self.ax.set_xlabel('X_1')
         self.ax.set_ylabel('X_2')
@@ -357,8 +496,8 @@ class PlotWindow(tk.Frame):
         Z = np.array(Z)
         Z = np.reshape(Z, (len(x1), len(x2)))
         # plt.plot.clear()
-        self.a=self.ax.contourf(X1, X2, Z, extend='both', levels=20)
-        self.cb=plt.colorbar(self.a)
+        self.contourf=self.ax.contourf(X1, X2, Z, extend='both', levels=20)
+        self.cb=plt.colorbar(self.contourf)
 
 
         self.canvas.draw()
@@ -368,11 +507,36 @@ class PlotWindow(tk.Frame):
         """deconstructor
         """
         self.quit()
-        self.delete()
+        # self.destroy()
 
 class HelpWindow(tk.Tk):
+    """HelpWindow is simple class based on tk.Tk providing window with
+    text field with some information.
 
+    Args:
+        tk (tk.Tk): Parent class.
+    
+     Static Public Attributes:
+        HELP_STRING: Help text String.
+        counter: Counter of active instances.
+    Public Atributes:
+        container (ttk.Frame): main Frame contains all widgets.
+        text (ttk.Text): Text field.
+        text_scroll (ttk.Scrollbar): Scrollbar widget vertical.
+        text_scrollHor (ttk.Scrollbar): Scrollbar widget horizontal.    
+    """
+
+
+
+
+    ##################################
+    ##### Counter of active instances.
+    ##################################
     counter = 0
+
+    ##################################
+    ##### String with helpful informations.
+    ##################################
     HELP_STRING = """|----------------------------------------------------------|
 |---------------------------HELP---------------------------|
 |App allows to  search local minimum with Powells Method.  |
@@ -403,8 +567,9 @@ class HelpWindow(tk.Tk):
 |-------------------------------------------------------   |
 """
 
-
     def __init__(self):
+        """ Constructor of HelpWindow. 
+        """
         super().__init__()
         self.counter+=1
         self.title('Powells Method - HELP')
@@ -415,45 +580,64 @@ class HelpWindow(tk.Tk):
         self['background'] = '#444'
         self.grid_columnconfigure(0,weight=1)
         self.grid_rowconfigure(0,weight=1)
-
+        ##################################
+        ##### Main container for widgets in this window.
+        ##################################
         self.container  = ttk.Frame(self)
         self.container.grid_columnconfigure(0,weight=1)
         self.container.grid_rowconfigure(0,weight=1)
         self.container.grid(row=0, column=0,sticky="NSEW")
 
+        ##################################
+        ##### Text field for HelpString.
+        ##################################
         self.text = tk.Text(self.container, background="#555", foreground="white", height=self.winfo_height()-3, state=DISABLED)
         self.text.insert("1.0", self.HELP_STRING)
-        # self.text["state"] = "disabled"
+        self.text["state"] = "disabled"
         self.text.grid(sticky='NSW')
 
+        ##################################
+        ##### Scrollbar widget connected with text field. Y-axis.
+        ##################################
         self.text_scroll = ttk.Scrollbar(self, orient="vertical", command=self.text.yview)
         self.text["yscrollcommand"] = self.text_scroll.set
         self.text_scroll.grid(row=0, column=0, sticky="NSE")
 
+
+        ##################################
+        ##### Scrollbar widget connected with text field. X-axis.
+        ##################################
         self.text_scrollHor = ttk.Scrollbar(self, orient="horizontal", command=self.text.xview)
         self.text["xscrollcommand"] = self.text_scrollHor.set
         self.text_scrollHor.grid(row=0, column=0, sticky="WE")
-
         self.counterUp()
+
+
     @classmethod
     def counterUp(cls):
+        """Classmethod for debugging destructor with counting new intances.
+        """
         cls.counter+=1
         # print(cls.counter)
     @classmethod
     def counterDown(cls):
+        """Classmethod for debugging destructor.
+        """
         cls.counter-=1
         # print(cls.counter)
 
     def on_closing(self):
+        """Closuring of HelpWindow and destroying instance if HelpWindow()
+        """
         self.counterDown()
         self.quit()
         self.destroy()
 
 
 
-def test():
+def main():
     root = MainWindow()
     root.mainloop()
 
 if __name__=='__main__':
-    test()
+    main()

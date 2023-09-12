@@ -23,7 +23,7 @@ POWELL_OUTPUT = {}
 
 def powellsMethod(func: Callable[[float, float, float, float, float], float], start: List[float],
                    eps1: float, eps2: float, gssRange: List[float], maxIter: int, ax=None, gssEps:float = None,
-                     logVar = None)->set[POWELL_OUTPUT]:
+                     logVar = None)->set:
     """_summary_
 
     Args:
@@ -57,8 +57,8 @@ def powellsMethod(func: Callable[[float, float, float, float, float], float], st
     points = np.zeros((dim+1, dim))
     startPoint = np.array(start)
    
-    print("tutaj")
-    print(maxIter)
+    # print("tutaj")
+    # print(maxIter)
     while(currentIteration < maxIter):
         currentIteration = currentIteration + 1
 

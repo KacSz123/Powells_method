@@ -1,1 +1,4 @@
-__pycache__/
+__pycache__
+doc/html
+doc/latex
+__pycache__
