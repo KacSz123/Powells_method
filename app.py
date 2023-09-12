@@ -3,7 +3,7 @@
 """
 from powell import powellsMethod
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, END, DISABLED
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
@@ -19,12 +19,25 @@ from matplotlib.backends.backend_tkagg import (
 
 
 class MainWindow(tk.Tk):
-    DIRECT_METHODS = ("Golden Search", 'method 2', 'method 3')
+    """_summary_
+
+    Args:
+        tk (_type_): _description_
+    
+    Constants:
+        DIRECT_METHODS: tuple of available mathematical methods for searching minimum in direction.
+        LABELS_FONT: macro of font for labels, ready to use.
+        ENTRY_FONT: macro of font for entries, ready to use.
+        TITLE_FONT: macro of font for title, ready to use.
+    """
+    DIRECT_METHODS = ("Golden Search", 'To be Added',  'To be Added')
     LABELS_FONT = ('Courier 13')
     ENTRY_FONT = ('Courier 12')
     TITLE_FONT = ('Times 24')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs)->None:
+        """ __init__ inits main window
+        """
         super().__init__()
         self.title('Powells Method')
         self.geometry("1070x530")
@@ -87,9 +100,11 @@ class MainWindow(tk.Tk):
         self.plotFrame.grid(row=0,column=1, sticky="NSWE",rowspan=2)
         self.plotCanvas = PlotWindow(self.plotFrame, self)
         self.plotCanvas.grid(sticky='WN')
-        # plotCanvas.grid()
-        # sep = ttk.Separator(container,orient='vertical').grid(row=0,column=1, sticky="NSWE",rowspan=2)
-    def on_closing(self):
+        
+
+    def on_closing(self)->None:
+        """_summary_
+        """
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.quit()
             self.destroy()
@@ -256,7 +271,13 @@ class OptionPanel(ttk.Frame):
 class LogFrame(ttk.Frame):
 
 
-    def __init__(self, container, controller):
+    def __init__(self, container)->None:
+        """_summary_
+
+        Args:
+            container (tk.Tk): ref to main window
+
+        """
         super().__init__(container)
         self.grid_columnconfigure(0,weight=1)
         self.grid_columnconfigure(1,weight=1)
@@ -272,17 +293,23 @@ class LogFrame(ttk.Frame):
         self.text.insert("1.0", 'test text!\n')
     pass
 
-class SolutionFrame(ttk.Frame):
-    pass
 
 class PlotWindow(tk.Frame):
     def __init__(self, container, controller):
+        """_summary_
+
+        Args:
+            container (Frame): Container for this frame
+            controller (tk.Tk): main window or another object with controlls
+        """
         super().__init__(container)
         self.controller = controller
         self.fig = plt.Figure()
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         NavigationToolbar2Tk(self.canvas, self)
         self.ax = self.fig.add_subplot(111)
+        print(type(self.ax))
+        input()
         self.ax.set_title(str(self.controller.functionString.get()))
         self.ax.set_xlabel('X_1')
         self.ax.set_ylabel('X_2')
@@ -295,21 +322,26 @@ class PlotWindow(tk.Frame):
 
 
     def plotHandler(self):
-
+        """Realization of visualisation of Powell Method.
+        """
         self.ax.cla()
+        self.cb.remove()
+
+
         func = parseFunction(self.controller.functionString.get())
+        
+        ab = self.controller.abGSS.get().split(',')
         x10, x20 = self.controller.startPoint.get().split(',')
         x10 =float(x10)
         x20=float(x20)
-        self.cb.remove()
         x1lim = tuple([float(xo) for xo in self.controller.x1Range.get().split(',')])
         x2lim = tuple([float(xo) for xo in self.controller.x2Range.get().split(',')])
-        ab = self.controller.abGSS.get().split(',')
 
-        # ab = [ float(x) for x in ab]
+        # run Powell
         powellResult = powellsMethod(func,[x10,x20],int(self.controller.epsilon1.get()),int(self.controller.epsilon2.get()), [ float(x) for x in ab],
-                                     self.controller.paramL.get(),ax=self.ax, canvas = self.canvas)
-        print(powellResult)
+                                     self.controller.paramL.get(),ax=self.ax,gssEps=self.controller.epsilon.get(),
+                                     logVar=self.controller.logFrame.text)
+
         
         self.ax.set_xlim(*x1lim)
         self.ax.set_ylim(*x2lim)
@@ -328,25 +360,18 @@ class PlotWindow(tk.Frame):
         self.a=self.ax.contourf(X1, X2, Z, extend='both', levels=20)
         self.cb=plt.colorbar(self.a)
 
-        # print(len(powellResult["stepList"][0][0]))
-        # print(len(powellResult["stepList"][1][0]))
-        # print(len(powellResult["stepList"][2][0]))
-        # print(len(powellResult["stepList"][3][0]))
-        # print(powellResult["stepList"][1][0])
-        # input()
-        # self.ax.plot(powellResult["stepList"][0][0], powellResult["stepList"][0][1], marker='o',
-        #             markersize=4, markeredgecolor="red", markerfacecolor="red" )
-        # self.ax.plot([powellResult["stepList"][0][0], powellResult["stepList"][1][0][0]],
-        #              [powellResult["stepList"][0][1],powellResult["stepList"][1][0][1]],'k-').clear()
-        # self.canvas.
+
         self.canvas.draw()
 
 
     def __del__(self):
+        """deconstructor
+        """
         self.quit()
         self.delete()
 
 class HelpWindow(tk.Tk):
+
     counter = 0
     HELP_STRING = """|----------------------------------------------------------|
 |---------------------------HELP---------------------------|
@@ -377,6 +402,8 @@ class HelpWindow(tk.Tk):
 |                                                          |
 |-------------------------------------------------------   |
 """
+
+
     def __init__(self):
         super().__init__()
         self.counter+=1
@@ -394,28 +421,28 @@ class HelpWindow(tk.Tk):
         self.container.grid_rowconfigure(0,weight=1)
         self.container.grid(row=0, column=0,sticky="NSEW")
 
-        self.text = tk.Text(self.container, background="#555", foreground="white", height=self.winfo_height()-3)
+        self.text = tk.Text(self.container, background="#555", foreground="white", height=self.winfo_height()-3, state=DISABLED)
         self.text.insert("1.0", self.HELP_STRING)
-        self.text["state"] = "normal"
+        # self.text["state"] = "disabled"
         self.text.grid(sticky='NSW')
 
         self.text_scroll = ttk.Scrollbar(self, orient="vertical", command=self.text.yview)
         self.text["yscrollcommand"] = self.text_scroll.set
         self.text_scroll.grid(row=0, column=0, sticky="NSE")
 
+        self.text_scrollHor = ttk.Scrollbar(self, orient="horizontal", command=self.text.xview)
+        self.text["xscrollcommand"] = self.text_scrollHor.set
+        self.text_scrollHor.grid(row=0, column=0, sticky="WE")
+
         self.counterUp()
     @classmethod
     def counterUp(cls):
         cls.counter+=1
-        print(cls.counter)
+        # print(cls.counter)
     @classmethod
     def counterDown(cls):
         cls.counter-=1
-        print(cls.counter)
-
-    # def closeMe(self):
-    #     # print(self.counter)
-    #     self.destroy()
+        # print(cls.counter)
 
     def on_closing(self):
         self.counterDown()

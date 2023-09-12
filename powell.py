@@ -1,6 +1,7 @@
 import numpy as np
 from math import sqrt
 from typing import Callable, List
+from tkinter import END
 import matplotlib.pyplot as plt
 
 from function_parser import *
@@ -17,11 +18,36 @@ POWELL_KWARGUMENTS ={"function",
                      "ax"   
 }   
 
+POWELL_OUTPUT = {}
+
 
 def powellsMethod(func: Callable[[float, float, float, float, float], float], start: List[float],
-                   eps1: float, eps2: float, gssRange: List[float], maxIter: int, ax=None):
-    # print(start)
-    # input()
+                   eps1: float, eps2: float, gssRange: List[float], maxIter: int, ax=None, gssEps:float = None,
+                     logVar = None)->set[POWELL_OUTPUT]:
+    """_summary_
+
+    Args:
+        func (Callable[[float, float, float, float, float], float]): evaluated function
+        start (List[float]): startPoint len = 1,...,5
+        eps1 (float): Stop criterium for minimum difference between next points
+        eps2 (float): Stop criterium for minimum difference between next values
+        gssRange (List[float]): [a,b] range bouded by a and be for searching in direction
+        maxIter (int): maximum number of iteration
+        ax (matplotlib.axes._axes.Axes, optional): Axes from pyplot. If it's set points are plotted on ax. Defaults to None.
+        gssEps (float, optional): Epsilon for methods searching in direction. Defaults to None.
+        logVar (ttk.text, optional): ref to text variable to log points and values. Defaults to None.
+
+
+    Returns:
+        set[POWELL_OUTPUT]: _description_
+    """
+    if gssEps>=eps2 or gssEps==None:
+        gs=eps2/10
+    else:
+        gs=eps2
+    
+    # if logVar!=0:
+    #     logVar.insert(f'START: Func:' )    
     dim = len(start)
 
     stepList = []
@@ -34,17 +60,18 @@ def powellsMethod(func: Callable[[float, float, float, float, float], float], st
     print("tutaj")
     print(maxIter)
     while(currentIteration < maxIter):
-
-        points[0] = searchMinimumInDirection(func, dirVectors[0], startPoint, gssRange)
         currentIteration = currentIteration + 1
+
+        points[0] = searchMinimumInDirection(func, dirVectors[0], startPoint, gssRange, tolerance=gs)
+        # currentIteration = currentIteration + 1
 
         for i in range(1, dim):
             points[i] = searchMinimumInDirection(
-                func, dirVectors[i], points[i-1], gssRange)
-            currentIteration = currentIteration + 1
+                func, dirVectors[i], points[i-1], gssRange,tolerance=gs)
+            # currentIteration -= 1currentIteration + 1
 
         newDir = np.subtract(points[dim-1], startPoint)
-        points[dim] = searchMinimumInDirection(func, newDir, points[dim-1], gssRange)
+        points[dim] = searchMinimumInDirection(func, newDir, points[dim-1], gssRange,tolerance=gs)
 
         for i in range(dim-1):
             dirVectors[i] = np.copy(dirVectors[i+1])
@@ -53,11 +80,11 @@ def powellsMethod(func: Callable[[float, float, float, float, float], float], st
         if any([any(np.isnan(x)) for x in points]):
             return 'Error', *points
         if(dim == 2 and ax!=None):
-            #print(f'Line via {startPoint} {points[0]} {points[1]} {points[2]}')
             ax.plot([startPoint[0], points[0][0]], [
                      startPoint[1], points[0][1]], 'k-')
             ax.plot(startPoint[0], startPoint[1], marker='o',
                     markersize=3.5, markeredgecolor="red", markerfacecolor="red" )
+                    
             ax.plot([points[0][0], points[1][0]], [
                      points[0][1], points[1][1]], 'k-')
             ax.plot(points[0][0], points[0][1], marker='o',
@@ -66,31 +93,45 @@ def powellsMethod(func: Callable[[float, float, float, float, float], float], st
                      points[1][1], points[2][1]], 'k-')
             ax.plot(points[1][0], points[1][1], marker='o',
                     markersize=3, markeredgecolor="gray", markerfacecolor="gray" )
-            # if(can
-            #     canvas.draw()vas!=None):
+
         l = points
         stepList.append(np.copy(startPoint))
         stepList.append(np.copy(l[:-1]))
-        
+
         startPoint = np.copy(points[dim])
         diff = abs(func(*points[dim]) - func(*points[0]))
         
-        print("tutaj2")
-        print(currentIteration)
-        currentIteration = currentIteration + 1
+        if logVar!=None:
+            logVar.insert("end",f'step No. [{currentIteration}]\n   [{startPoint[0]:.5f}, {startPoint[1]:.5f}] = [{func(*startPoint):.2f}]\n')
+            for a in l[:-1]:
+                logVar.insert("end",f"   [{a[0]:.5f}, {a[1]:.5f}] = [{func(*a):.2f}]\n")
+
+
+
         if diff < eps2:
-            return points[dim], func(*points[dim]), 'eps2', diff, stepList
+            return {'points':points[dim], 'func':func(*points[dim]), 'stopCrit':'Epsilon2', 'iter': f'Iteration count: {currentIteration}','stepList': stepList}
+
         elif all([vectorLength(points[i],points[dim-1]) < eps1 for i in range(0,dim-1)]):
-            return points[dim], func(*points[dim]), 'eps1',f'Value {[vectorLength(points[i],points[dim-1]) < eps1 for i in range(0,dim-1)]}', stepList
-    
-    return {'points':points[dim], 'func':func(*points[dim]), 'maxiter':'Max Iteration', 'iter': f'Iteration count: {currentIteration}','stepList': stepList}
+           return {'points':points[dim], 'func':func(*points[dim]), 'stopCrit':'Epsilon1', 'iter': f'Iteration count: {currentIteration}','stepList': stepList}
+    return {'points':points[dim], 'func':func(*points[dim]), 'stopCrit':'Max Iteration', 'iter': f'Iteration count: {currentIteration}','stepList': stepList}
 
 
 
 
 
-def goldenSearch(f: Callable[[float, float, float, float, float], float], a: List[float], b: List[float], tol=0.001, iter=100):
+def goldenSearch(f: Callable[[float, float, float, float, float], float], a: List[float], b: List[float], tol=0.001, iter=100)->np.array:
+    """_summary_
 
+    Args:
+        f (Callable[[float, float, float, float, float], float]): evaluated function
+        a (List[float]): left bound
+        b (List[float]): right bound
+        tol (float, optional): Toleration. Defaults to 0.001.
+        iter (int, optional): Maximum no. of iteration. Defaults to 100.
+
+    Returns:
+        np.array:minimum of func from range [a,b] 
+    """
     c = np.subtract(b, np.divide(np.subtract(b, a), GOLDEN_SEARCH_RATIO))
     d = np.add(a, np.divide(np.subtract(b, a), GOLDEN_SEARCH_RATIO))
     i = 0
@@ -125,6 +166,14 @@ def vectorLength(startPoint:List[float], endPoint:List[float])->float:
     return l
 
 def getVectorNorm(x: List[float]) -> List[float]:
+    """_summary_
+
+    Args:
+        x (List[float]): Points of vector
+
+    Returns:
+        List[float]: Norm of vector
+    """
     length = vectorLength(np.zeros(len(x)), x)
     if(length == 0):
         return [0 for v in x]
@@ -132,14 +181,24 @@ def getVectorNorm(x: List[float]) -> List[float]:
 
 
 def searchMinimumInDirection(func: Callable[[float, float, float, float, float], float], direction: List[float],
-                     startPoint: List[float], gssrange: List[float]) -> List[float]:
+                     startPoint: List[float], gssrange: List[float],tolerance) -> List[float]:
+    """_summary_
+
+    Args:
+        func (Callable[[float, float, float, float, float], float]): evaluated function
+        direction (List[float]): direction to search
+        startPoint (List[float]): startpoint
+        gssrange (List[float]): section [a,b] for searching in direction
+        tolerance (_type_): epsilon for s. i. d.
+
+    Returns:
+        List[float]: result of golden search function
+    """
     normalizedDir = getVectorNorm(direction)
-    #print(f'{startPoint} {normalizedDir} {gssrange}')
-    
+
     p0 = [startPoint[i] + gssrange[0]*normalizedDir[i] for i in range(len(direction))]
     p1 = [startPoint[i] + gssrange[1]*normalizedDir[i] for i in range(len(direction))]
 
-    #print(f'Minimize from {p0} to {p1}')
-    return goldenSearch(func, p0, p1)
+    return goldenSearch(func, p0, p1,tol=tolerance)
 
 
